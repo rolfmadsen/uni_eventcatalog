@@ -12,10 +12,23 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// Cache for build time
+let cachedServices: Record<string, Service[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getServices = async ({ getAllVersions = true }: Props = {}): Promise<Service[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  // Check if we have cached domains for this specific getAllVersions value
+  if (cachedServices[cacheKey].length > 0) {
+    return cachedServices[cacheKey];
+  }
+
   // Get services that are not versioned
   const services = await getCollection('services', (service) => {
-    return (getAllVersions || !service.slug.includes('versioned')) && service.data.hidden !== true;
+    return (getAllVersions || !service.data?.pathToFile?.includes('versioned')) && service.data.hidden !== true;
   });
   const events = await getCollection('events');
   const commands = await getCollection('commands');
@@ -24,7 +37,7 @@ export const getServices = async ({ getAllVersions = true }: Props = {}): Promis
   const allMessages = [...events, ...commands, ...queries];
 
   // @ts-ignore // TODO: Fix this type
-  return services.map((service) => {
+  cachedServices[cacheKey] = services.map((service) => {
     const { latestVersion, versions } = getVersionForCollectionItem(service, services);
 
     const sendsMessages = service.data.sends || [];
@@ -65,6 +78,13 @@ export const getServices = async ({ getAllVersions = true }: Props = {}): Promis
       },
     };
   });
+
+  // order them by the name of the service
+  cachedServices[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedServices[cacheKey];
 };
 
 export const getProducersOfMessage = (services: Service[], message: CollectionEntry<'events' | 'commands' | 'queries'>) => {

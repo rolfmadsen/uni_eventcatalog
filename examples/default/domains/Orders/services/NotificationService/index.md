@@ -38,6 +38,20 @@ The Notification Service is responsible for managing and delivering notification
     <Tile icon="BoltIcon"  href={`/visualiser/services/${frontmatter.id}/${frontmatter.version}`} title={`Receives ${frontmatter.receives.length} messages`} description="This service receives messages from other services" />
 </Tiles>
 
+### Core features
+
+| Feature | Description |
+|---------|-------------|
+| Multi-Channel Delivery | Supports notifications via email, SMS, push notifications, and in-app messages |
+| Template Management | Customizable notification templates with dynamic content placeholders |
+| Delivery Status Tracking | Real-time tracking and monitoring of notification delivery status |
+| Rate Limiting | Prevents notification flooding through configurable rate limits |
+| Priority Queue | Handles urgent notifications with priority delivery mechanisms |
+| Batch Processing | Efficiently processes and sends bulk notifications |
+| Retry Mechanism | Automatic retry logic for failed notification deliveries |
+| Event-Driven Notifications | Triggers notifications based on system events and user actions |
+
+
 
 ## Architecture diagram
 
@@ -55,5 +69,25 @@ The Notification Service is responsible for managing and delivering notification
     - Attributes: channelId, name, provider, configuration 
   </Accordion>
 </AccordionGroup>
+
+## Infrastructure
+
+The Notification Service is hosted on AWS.
+
+The diagram below shows the infrastructure of the Notification Service. The service is hosted on AWS and uses AWS Lambda to handle the notification requests. The notification is stored in an AWS Aurora database and the notification metadata is stored in an AWS S3 bucket.
+
+```mermaid
+architecture-beta
+    group api(logos:aws)
+
+    service db(logos:aws-aurora)[Notification DB] in api
+    service disk1(logos:aws-s3)[Notification Metadata] in api
+    service server(logos:aws-lambda)[Notification Handler] in api
+
+    db:L -- R:server
+    disk1:T -- B:server
+```
+
+You can find more information about the Notification Service infrastructure in the [Notification Service documentation](https://github.com/event-catalog/pretend-shipping-service/blob/main/README.md).
 
 <Footer />

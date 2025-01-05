@@ -38,6 +38,8 @@ import Footer from '@catalog/components/footer.astro';
 
 The Inventory Service is a critical component of the system responsible for managing product stock levels, tracking inventory movements, and ensuring product availability. It interacts with other services to maintain accurate inventory records and supports operations such as order fulfillment, restocking, and inventory audits.
 
+
+
 <Tiles >
     <Tile icon="DocumentIcon" href={`/docs/services/${frontmatter.id}/${frontmatter.version}/changelog`}  title="View the changelog" description="Want to know the history of this service? View the change logs" />
     <Tile icon="UserGroupIcon" href="/docs/teams/full-stack" title="Contact the team" description="Any questions? Feel free to contact the owners" />
@@ -45,10 +47,41 @@ The Inventory Service is a critical component of the system responsible for mana
     <Tile icon="BoltIcon"  href={`/visualiser/services/${frontmatter.id}/${frontmatter.version}`} title={`Receives ${frontmatter.receives.length} messages`} description="This service receives messages from other services" />
 </Tiles>
 
+## Core features
+
+| Feature | Description |
+|---------|-------------|
+| Real-time Stock Tracking | Monitors inventory levels across all warehouses in real-time |
+| Automated Reordering | Triggers purchase orders when stock levels fall below defined thresholds |
+| Multi-warehouse Support | Manages inventory across multiple warehouse locations |
+| Batch Processing | Handles bulk inventory updates and adjustments efficiently |
+
+
 
 ## Architecture diagram
 
 <NodeGraph title="Hello world" />
+
+## Infrastructure
+
+The Inventory Service is hosted on AWS.
+
+The diagram below shows the infrastructure of the Inventory Service. The service is hosted on AWS and uses AWS Lambda to handle the inventory requests. The inventory is stored in an AWS Aurora database and the inventory metadata is stored in an AWS S3 bucket.
+
+```mermaid
+architecture-beta
+    group api(logos:aws)
+
+    service db(logos:aws-aurora)[Inventory DB] in api
+    service disk1(logos:aws-s3)[Inventory Metadata] in api
+    service server(logos:aws-lambda)[Inventory Handler] in api
+
+    db:L -- R:server
+    disk1:T -- B:server
+```
+
+You can find more information about the Inventory Service infrastructure in the [Inventory Service documentation](https://github.com/event-catalog/pretend-shipping-service/blob/main/README.md).
+
 
 
 <Steps title="How to connect to Inventory Service">

@@ -19,15 +19,27 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// cache for build time
+let cachedChannels: Record<string, Channel[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getChannels = async ({ getAllVersions = true }: Props = {}): Promise<Channel[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  if (cachedChannels[cacheKey].length > 0) {
+    return cachedChannels[cacheKey];
+  }
+
   const channels = await getCollection('channels', (query) => {
-    return (getAllVersions || !query.slug.includes('versioned')) && query.data.hidden !== true;
+    return (getAllVersions || !query.data?.pathToFile?.includes('versioned')) && query.data.hidden !== true;
   });
 
   const { commands, events, queries } = await getMessages();
   const allMessages = [...commands, ...events, ...queries];
 
-  return channels.map((channel) => {
+  cachedChannels[cacheKey] = channels.map((channel) => {
     const { latestVersion, versions } = getVersionForCollectionItem(channel, channels);
 
     const messagesForChannel = allMessages.filter((message) => {
@@ -61,4 +73,11 @@ export const getChannels = async ({ getAllVersions = true }: Props = {}): Promis
       },
     };
   });
+
+  // order them by the name of the channel
+  cachedChannels[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedChannels[cacheKey];
 };

@@ -11,10 +11,22 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// Cache for build time
+let cachedFlows: Record<string, Flow[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getFlows = async ({ getAllVersions = true }: Props = {}): Promise<Flow[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  if (cachedFlows[cacheKey].length > 0) {
+    return cachedFlows[cacheKey];
+  }
+
   // Get flows that are not versioned
   const flows = await getCollection('flows', (flow) => {
-    return (getAllVersions || !flow.slug.includes('versioned')) && flow.data.hidden !== true;
+    return (getAllVersions || !flow.data.pathToFile?.includes('versioned')) && flow.data.hidden !== true;
   });
 
   const events = await getCollection('events');
@@ -23,7 +35,7 @@ export const getFlows = async ({ getAllVersions = true }: Props = {}): Promise<F
   const allMessages = [...events, ...commands];
 
   // @ts-ignore // TODO: Fix this type
-  return flows.map((flow) => {
+  cachedFlows[cacheKey] = flows.map((flow) => {
     // @ts-ignore
     const { latestVersion, versions } = getVersionForCollectionItem(flow, flows);
     const steps = flow.data.steps || [];
@@ -56,4 +68,11 @@ export const getFlows = async ({ getAllVersions = true }: Props = {}): Promise<F
       },
     };
   });
+
+  // order them by the name of the flow
+  cachedFlows[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedFlows[cacheKey];
 };

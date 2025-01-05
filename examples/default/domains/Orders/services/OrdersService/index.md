@@ -39,8 +39,37 @@ The Orders Service is responsible for managing customer orders within the system
     <Tile icon="BoltIcon"  href={`/visualiser/services/${frontmatter.id}/${frontmatter.version}`} title={`Receives ${frontmatter.receives.length} messages`} description="This service receives messages from other services" />
 </Tiles>
 
+### Core features
+
+| Feature | Description |
+|---------|-------------|
+| Order Management | Handles order creation, updates, and status tracking |
+| Inventory Integration | Validates and processes inventory for incoming orders |
+| Payment Processing | Integrates with payment gateways to handle payment transactions |
+| Notification Integration | Sends notifications to users and other services |
+
 ## Architecture diagram 
 
 <NodeGraph />
+
+## Infrastructure
+
+The Orders Service is hosted on AWS.
+
+The diagram below shows the infrastructure of the Orders Service. The service is hosted on AWS and uses AWS Lambda to handle the order requests. The order is stored in an AWS Aurora database and the order metadata is stored in an AWS S3 bucket.
+
+```mermaid
+architecture-beta
+    group api(logos:aws)
+
+    service db(logos:aws-aurora)[Order DB] in api
+    service disk1(logos:aws-s3)[Order Metadata] in api
+    service server(logos:aws-lambda)[Order Handler] in api
+
+    db:L -- R:server
+    disk1:T -- B:server
+```
+
+You can find more information about the Orders Service infrastructure in the [Orders Service documentation](https://github.com/event-catalog/pretend-shipping-service/blob/main/README.md).
 
 <Footer />

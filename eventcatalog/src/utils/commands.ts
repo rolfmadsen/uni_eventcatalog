@@ -17,15 +17,27 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// cache for build time
+let cachedCommands: Record<string, Command[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getCommands = async ({ getAllVersions = true }: Props = {}): Promise<Command[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  if (cachedCommands[cacheKey].length > 0) {
+    return cachedCommands[cacheKey];
+  }
+
   const commands = await getCollection('commands', (command) => {
-    return (getAllVersions || !command.slug.includes('versioned')) && command.data.hidden !== true;
+    return (getAllVersions || !command.data?.pathToFile?.includes('versioned')) && command.data.hidden !== true;
   });
 
   const services = await getCollection('services');
   const allChannels = await getCollection('channels');
 
-  return commands.map((command) => {
+  cachedCommands[cacheKey] = commands.map((command) => {
     const { latestVersion, versions } = getVersionForCollectionItem(command, commands);
 
     const producers = services.filter((service) => {
@@ -67,4 +79,11 @@ export const getCommands = async ({ getAllVersions = true }: Props = {}): Promis
       },
     };
   });
+
+  // order them by the name of the command
+  cachedCommands[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedCommands[cacheKey];
 };

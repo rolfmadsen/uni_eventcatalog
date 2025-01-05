@@ -17,15 +17,27 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// Cache for build time
+let cachedQueries: Record<string, Query[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getQueries = async ({ getAllVersions = true }: Props = {}): Promise<Query[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  if (cachedQueries[cacheKey].length > 0) {
+    return cachedQueries[cacheKey];
+  }
+
   const queries = await getCollection('queries', (query) => {
-    return (getAllVersions || !query.slug.includes('versioned')) && query.data.hidden !== true;
+    return (getAllVersions || !query.data?.pathToFile?.includes('versioned')) && query.data.hidden !== true;
   });
 
   const services = await getCollection('services');
   const allChannels = await getCollection('channels');
 
-  return queries.map((query) => {
+  cachedQueries[cacheKey] = queries.map((query) => {
     const { latestVersion, versions } = getVersionForCollectionItem(query, queries);
 
     const producers = services.filter((service) =>
@@ -67,4 +79,11 @@ export const getQueries = async ({ getAllVersions = true }: Props = {}): Promise
       },
     };
   });
+
+  // order them by the name of the query
+  cachedQueries[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedQueries[cacheKey];
 };

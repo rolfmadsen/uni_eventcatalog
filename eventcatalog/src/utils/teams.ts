@@ -4,7 +4,14 @@ import path from 'path';
 
 export type Team = CollectionEntry<'teams'>;
 
+// Cache for build time
+let cachedTeams: Team[] = [];
+
 export const getTeams = async (): Promise<Team[]> => {
+  if (cachedTeams.length > 0) {
+    return cachedTeams;
+  }
+
   // Get services that are not versioned
   const teams = await getCollection('teams', (team) => {
     return team.data.hidden !== true;
@@ -17,21 +24,21 @@ export const getTeams = async (): Promise<Team[]> => {
   const events = await getCollection('events');
   const commands = await getCollection('commands');
 
-  return teams.map((team) => {
+  cachedTeams = teams.map((team) => {
     const ownedDomains = domains.filter((domain) => {
-      return domain.data.owners?.find((owner) => owner.slug === team.data.id);
+      return domain.data.owners?.find((owner) => owner.id === team.data.id);
     });
 
     const ownedServices = services.filter((service) => {
-      return service.data.owners?.find((owner) => owner.slug === team.data.id);
+      return service.data.owners?.find((owner) => owner.id === team.data.id);
     });
 
     const ownedEvents = events.filter((event) => {
-      return event.data.owners?.find((owner) => owner.slug === team.data.id);
+      return event.data.owners?.find((owner) => owner.id === team.data.id);
     });
 
     const ownedCommands = commands.filter((command) => {
-      return command.data.owners?.find((owner) => owner.slug === team.data.id);
+      return command.data.owners?.find((owner) => owner.id === team.data.id);
     });
 
     return {
@@ -50,4 +57,11 @@ export const getTeams = async (): Promise<Team[]> => {
       },
     };
   });
+
+  // order them by the name of the team
+  cachedTeams.sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedTeams;
 };

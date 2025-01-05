@@ -11,17 +11,30 @@ interface Props {
   getAllVersions?: boolean;
 }
 
+// Update cache to store both versions
+let cachedDomains: Record<string, Domain[]> = {
+  allVersions: [],
+  currentVersions: [],
+};
+
 export const getDomains = async ({ getAllVersions = true }: Props = {}): Promise<Domain[]> => {
+  const cacheKey = getAllVersions ? 'allVersions' : 'currentVersions';
+
+  // Check if we have cached domains for this specific getAllVersions value
+  if (cachedDomains[cacheKey].length > 0) {
+    return cachedDomains[cacheKey];
+  }
+
   // Get all the domains that are not versioned
   const domains = await getCollection('domains', (domain) => {
-    return (getAllVersions || !domain.slug.includes('versioned')) && domain.data.hidden !== true;
+    return (getAllVersions || !domain.data?.pathToFile?.includes('versioned')) && domain.data.hidden !== true;
   });
 
   // Get all the services that are not versioned
   const servicesCollection = await getCollection('services');
 
   // @ts-ignore // TODO: Fix this type
-  return domains.map((domain) => {
+  cachedDomains[cacheKey] = domains.map((domain) => {
     const { latestVersion, versions } = getVersionForCollectionItem(domain, domains);
 
     // const receives = service.data.receives || [];
@@ -51,13 +64,20 @@ export const getDomains = async ({ getAllVersions = true }: Props = {}): Promise
       },
     };
   });
+
+  // order them by the name of the domain
+  cachedDomains[cacheKey].sort((a, b) => {
+    return (a.data.name || a.data.id).localeCompare(b.data.name || b.data.id);
+  });
+
+  return cachedDomains[cacheKey];
 };
 
 export const getUbiquitousLanguage = async (domain: Domain): Promise<UbiquitousLanguage[]> => {
-  const { collection, data, slug } = domain;
+  const { collection, data } = domain;
 
   const ubiquitousLanguages = await getCollection('ubiquitousLanguages', (ubiquitousLanguage) => {
-    return ubiquitousLanguage.id.includes(`${collection}/${data.name}`);
+    return ubiquitousLanguage.id.toLowerCase().includes(`${collection}/${data.name}`.toLowerCase());
   });
 
   return ubiquitousLanguages;

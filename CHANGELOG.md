@@ -1,5 +1,68 @@
 # @eventcatalog/core
 
+## 2.18.5
+
+### Patch Changes
+
+- a60e94f: feat(core): resources across eventcatalog are now ordered by name
+- 12bbcaa: feat(core) enabled remark-gfm enabling tables in markdown
+
+## 2.18.4
+
+### Patch Changes
+
+- eb01981: fix(core): fixed issue with version ordering now uses semver
+
+## 2.18.3
+
+### Patch Changes
+
+- c8f1847: fix(core): fixing cache issues on build
+
+## 2.18.2
+
+### Patch Changes
+
+- 6f5746b: fix(core): ubiquitous lang now renders on domains
+
+## 2.18.1
+
+### Patch Changes
+
+- 2a0592e: feat(core): added icons packs for mermaid diagrams
+
+## 2.18.0
+
+### Minor Changes
+
+- 972478d: feat(core): added ability to specify dependencies for catalogs
+
+## 2.17.3
+
+### Patch Changes
+
+- f0d68f4: chore(core): updated mermaid to v11
+
+## 2.17.2
+
+### Patch Changes
+
+- 9f960c8: chore(core): cache data between build generation and added script to generate large catalogs
+- 9a61833: fix(core): fixed broken context map link in sidebar
+
+## 2.17.1
+
+### Patch Changes
+
+- 0c2f681: chore(core): removed --root and --port flags from astro preview command
+- fb6c0f2: feat(core): markdown files now support comments
+
+## 2.17.0
+
+### Minor Changes
+
+- 8746d32: chore(core): update to astro 5
+
 ## 2.16.6
 
 ### Patch Changes

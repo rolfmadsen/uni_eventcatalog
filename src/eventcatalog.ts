@@ -10,6 +10,7 @@ import logBuild from './analytics/log-build';
 import { VERSION } from './constants';
 import { watch } from './watcher';
 import { catalogToAstro } from './catalog-to-astro-content-directory';
+import resolveCatalogDependencies from './resolve-catalog-dependencies';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,6 +79,7 @@ program
 
     console.log('EventCatalog is starting at http://localhost:3000/docs');
 
+    await resolveCatalogDependencies(dir, core);
     await catalogToAstro(dir, core);
 
     let watchUnsub;
@@ -114,6 +116,7 @@ program
 
     await logBuild(dir);
 
+    await resolveCatalogDependencies(dir, core);
     await catalogToAstro(dir, core);
 
     execSync(`cross-env PROJECT_DIR='${dir}' CATALOG_DIR='${core}' npx astro build ${command.args.join(' ').trim()}`, {
@@ -123,16 +126,10 @@ program
   });
 
 const previewCatalog = ({ command }: { command: Command }) => {
-  /**
-   * TODO: get the port and outDir from the eventcatalog.config.js.
-   */
-  execSync(
-    `cross-env PROJECT_DIR='${dir}' CATALOG_DIR='${core}' npx astro preview --root ${dir} --port 3000 ${command.args.join(' ').trim()}`,
-    {
-      cwd: core,
-      stdio: 'inherit',
-    }
-  );
+  execSync(`cross-env PROJECT_DIR='${dir}' CATALOG_DIR='${core}' npx astro preview ${command.args.join(' ').trim()}`, {
+    cwd: core,
+    stdio: 'inherit',
+  });
 };
 
 program
